@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <title>ارسال موقعیت GPS به ربات تلگرام</title>
+</head>
+<body>
+  <h2>ارسال موقعیت GPS واقعی به ربات تلگرام</h2>
+  <button id="sendLocationBtn">ارسال موقعیت</button>
+  <p id="status"></p>
+
+  <script>
+    const btn = document.getElementById('sendLocationBtn');
+    const status = document.getElementById('status');
+
+    btn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        status.textContent = 'مرورگر شما از Geolocation پشتیبانی نمی‌کند.';
+        return;
+      }
+
+      status.textContent = 'در حال دریافت موقعیت...';
+
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+
+          status.textContent = `موقعیت دریافت شد: ${lat}, ${lon}. در حال ارسال به سرور...`;
+
+          fetch('/send-location', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ latitude: lat, longitude: lon })
+          })
+          .then(res => res.text())
+          .then(data => {
+            status.textContent = 'موقعیت با موفقیت به ربات تلگرام ارسال شد.';
+          })
+          .catch(err => {
+            status.textContent = 'خطا در ارسال موقعیت به سرور.';
+            console.error(err);
+          });
+        },
+        err => {
+          status.textContent = 'خطا در دریافت موقعیت: ' + err.message;
+        }
+      );
+    });
+  </script>
+</body>
+</html>
